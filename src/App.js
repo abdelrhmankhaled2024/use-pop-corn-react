@@ -4,16 +4,15 @@ import { Navbar, NumResults } from "./components/Navbar";
 import { ListBox, MovieItem } from "./components/ListBox";
 import { WatchedBox } from "./components/WatchedBox";
 import Loader from "./components/Loader";
+import MovieDetails from "./components/MovieDetails";
 
 const apiKey = "c0ecb462";
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
-  const [query, setQuery] = useState("avengers");
+  const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [ratingMovieId, setRatingMovieId] = useState(null);
-
-  const ratingMovie = watched.find((m) => m.imdbID === ratingMovieId) ?? null;
+  const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -46,11 +45,12 @@ export default function App() {
     };
   }, [query]);
 
-  function handleSelectMovie(newMovie) {
+  function handleAddToWatched(movie) {
     setWatched((prev) => {
-      if (prev.some((m) => m.imdbID === newMovie.imdbID)) return prev;
-      return [...prev, { ...newMovie, userRating: 0 }];
+      if (prev.some((m) => m.imdbID === movie.imdbID)) return prev;
+      return [...prev, movie];
     });
+    setSelectedId(null);
   }
 
   function handleRateMovie(imdbID, rating) {
@@ -63,7 +63,6 @@ export default function App() {
 
   function handleRemoveWatched(imdbID) {
     setWatched((prev) => prev.filter((movie) => movie.imdbID !== imdbID));
-    if (ratingMovieId === imdbID) setRatingMovieId(null);
   }
 
   return (
@@ -73,7 +72,16 @@ export default function App() {
       </Navbar>
       <Main>
         <ListBox>
-          {isLoading ? (
+          {selectedId ? (
+            <MovieDetails
+              key={selectedId}
+              selectedId={selectedId}
+              watched={watched}
+              onClose={() => setSelectedId(null)}
+              onAddToWatched={handleAddToWatched}
+              onRateMovie={handleRateMovie}
+            />
+          ) : isLoading ? (
             <Loader />
           ) : movies.length > 0 ? (
             <ul className="list">
@@ -81,22 +89,17 @@ export default function App() {
                 <MovieItem
                   key={movie.imdbID}
                   movie={movie}
-                  onSelectMovie={handleSelectMovie}
+                  onSelectMovie={(m) => setSelectedId(m.imdbID)}
                 />
               ))}
             </ul>
+          ) : movies.length === 0 && query === "" ? (
+            <></>
           ) : (
-            <p className="error">🎬 No movies found</p>
+            <p className="error">🎬 No movies found.</p>
           )}
         </ListBox>
-        <WatchedBox
-          watched={watched}
-          ratingMovie={ratingMovie}
-          onRateMovie={handleRateMovie}
-          onCloseRating={() => setRatingMovieId(null)}
-          onRemoveWatched={handleRemoveWatched}
-          onSelectForRating={setRatingMovieId}
-        />
+        <WatchedBox watched={watched} onRemoveWatched={handleRemoveWatched} />
       </Main>
     </>
   );
