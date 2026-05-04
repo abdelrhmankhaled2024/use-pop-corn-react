@@ -15,10 +15,6 @@ export default function StarRating({
     display: "flex",
     alignItems: "center",
     gap: "0.8rem",
-    gridColumn: "2",
-    borderTop: "1px solid rgba(255,255,255,0.07)",
-    paddingTop: "0.8rem",
-    marginTop: "0.4rem",
   };
 
   const starContainerStyle = {

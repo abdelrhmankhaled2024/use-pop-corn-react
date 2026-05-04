@@ -11,6 +11,9 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [query, setQuery] = useState("avengers");
   const [isLoading, setIsLoading] = useState(false);
+  const [ratingMovieId, setRatingMovieId] = useState(null);
+
+  const ratingMovie = watched.find((m) => m.imdbID === ratingMovieId) ?? null;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -60,7 +63,9 @@ export default function App() {
 
   function handleRemoveWatched(imdbID) {
     setWatched((prev) => prev.filter((movie) => movie.imdbID !== imdbID));
+    if (ratingMovieId === imdbID) setRatingMovieId(null);
   }
+
   return (
     <>
       <Navbar query={query} setQuery={setQuery}>
@@ -84,7 +89,14 @@ export default function App() {
             <p className="error">🎬 No movies found</p>
           )}
         </ListBox>
-        <WatchedBox watched={watched} onRateMovie={handleRateMovie} onRemoveWatched={handleRemoveWatched} />
+        <WatchedBox
+          watched={watched}
+          ratingMovie={ratingMovie}
+          onRateMovie={handleRateMovie}
+          onCloseRating={() => setRatingMovieId(null)}
+          onRemoveWatched={handleRemoveWatched}
+          onSelectForRating={setRatingMovieId}
+        />
       </Main>
     </>
   );

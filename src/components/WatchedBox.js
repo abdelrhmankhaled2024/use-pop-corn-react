@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { average } from "../utils";
-import StarRating from "./StarRating";
+import MovieRatingPanel from "./MovieRatingPanel";
 
 function WatchedSummary({ watched }) {
-  const avgImdbRating = average(watched.map((movie) => movie.imdbRating));
   const avgUserRating = average(watched.map((movie) => movie.userRating));
-  const avgRuntime = average(watched.map((movie) => movie.runtime));
 
   return (
     <div className="summary">
@@ -15,14 +13,20 @@ function WatchedSummary({ watched }) {
           <span>#️⃣</span>
           <span>{watched.length} movies</span>
         </p>
+        {watched.length > 0 && (
+          <p>
+            <span>⭐</span>
+            <span>{avgUserRating > 0 ? `avg ${avgUserRating.toFixed(1)}/10` : "unrated"}</span>
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
-function WatchedMovie({ movie, onRateMovie, onRemoveWatched }) {
+function WatchedMovie({ movie, onRemoveWatched, onSelectForRating }) {
   return (
-    <li>
+    <li onClick={() => onSelectForRating(movie.imdbID)} style={{ cursor: "pointer" }}>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>
@@ -30,15 +34,17 @@ function WatchedMovie({ movie, onRateMovie, onRemoveWatched }) {
           <span>📆</span>
           <span>{movie.Year}</span>
         </p>
+        <p>
+          <span>⭐</span>
+          <span>{movie.userRating > 0 ? `${movie.userRating}/10` : "Rate..."}</span>
+        </p>
       </div>
-      <StarRating
-        maxRating={10}
-        initialRating={movie.userRating}
-        onRate={(rating) => onRateMovie(movie.imdbID, rating)}
-      />
       <button
         className="btn-delete"
-        onClick={() => onRemoveWatched(movie.imdbID)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemoveWatched(movie.imdbID);
+        }}
       >
         ✕
       </button>
@@ -46,22 +52,29 @@ function WatchedMovie({ movie, onRateMovie, onRemoveWatched }) {
   );
 }
 
-function WatchedMovieList({ watched, onRateMovie, onRemoveWatched }) {
+function WatchedMovieList({ watched, onRemoveWatched, onSelectForRating }) {
   return (
     <ul className="list">
       {watched.map((movie) => (
         <WatchedMovie
           key={movie.imdbID}
           movie={movie}
-          onRateMovie={onRateMovie}
           onRemoveWatched={onRemoveWatched}
+          onSelectForRating={onSelectForRating}
         />
       ))}
     </ul>
   );
 }
 
-export function WatchedBox({ watched, onRateMovie, onRemoveWatched }) {
+export function WatchedBox({
+  watched,
+  ratingMovie,
+  onRateMovie,
+  onCloseRating,
+  onRemoveWatched,
+  onSelectForRating,
+}) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -71,12 +84,22 @@ export function WatchedBox({ watched, onRateMovie, onRemoveWatched }) {
       </button>
       {isOpen && (
         <>
-          <WatchedSummary watched={watched} />
-          <WatchedMovieList
-            watched={watched}
-            onRateMovie={onRateMovie}
-            onRemoveWatched={onRemoveWatched}
-          />
+          {ratingMovie ? (
+            <MovieRatingPanel
+              movie={ratingMovie}
+              onRate={onRateMovie}
+              onClose={onCloseRating}
+            />
+          ) : (
+            <>
+              <WatchedSummary watched={watched} />
+              <WatchedMovieList
+                watched={watched}
+                onRemoveWatched={onRemoveWatched}
+                onSelectForRating={onSelectForRating}
+              />
+            </>
+          )}
         </>
       )}
     </div>
