@@ -1,37 +1,52 @@
 import { useState } from "react";
 
-export default function StarRating({ maxRating, color = "#fcc419" }) {
+export default function StarRating({
+  maxRating,
+  color = "#fcc419",
+  onRate,
+  initialRating = 0,
+}) {
+  const [rating, setRating] = useState(initialRating);
+  const [templateRating, setTemplateRating] = useState(0);
+
+  const displayRating = templateRating || rating;
+
   const containerStyle = {
     display: "flex",
     alignItems: "center",
-    gap: "0.5rem",
+    gap: "0.8rem",
+    gridColumn: "2",
+    borderTop: "1px solid rgba(255,255,255,0.07)",
+    paddingTop: "0.8rem",
+    marginTop: "0.4rem",
   };
 
   const starContainerStyle = {
     display: "flex",
-    gap: "0.25rem",
+    gap: "0.15rem",
+    flexWrap: "wrap",
   };
 
   const textStyle = {
-    fontSize: "1.25rem",
-    fontWeight: "bold",
+    fontSize: "1.4rem",
+    fontWeight: "700",
     lineHeight: "1",
     margin: "0",
+    color: displayRating ? color : "#adb5bd",
+    minWidth: "3.2rem",
   };
 
-  const [rating, setRating] = useState(0);
-  const [templateRating, setTemplateRating] = useState(0);
-
-  function handelRate(rating) {
-    setRating(rating);
+  function handelRate(newRating) {
+    setRating(newRating);
+    onRate?.(newRating);
   }
+
   return (
     <div style={containerStyle}>
       <div style={starContainerStyle}>
         {Array.from({ length: maxRating }, (_, i) => (
           <Star
             key={i}
-            filled={i < maxRating}
             onRate={() => handelRate(i + 1)}
             full={templateRating ? templateRating >= i + 1 : rating >= i + 1}
             onHoverIn={() => setTemplateRating(i + 1)}
@@ -40,25 +55,38 @@ export default function StarRating({ maxRating, color = "#fcc419" }) {
           />
         ))}
       </div>
-      <p style={textStyle}>{templateRating || rating || ""}</p>
+      <p style={textStyle}>
+        {displayRating ? `${displayRating}/${maxRating}` : "–"}
+      </p>
     </div>
   );
 }
 
 function Star({ full, onRate, onHoverIn, onHoverOut, color = "#fcc419" }) {
+  const [hovered, setHovered] = useState(false);
+
   const starStyle = {
-    width: "1.5rem",
-    height: "1.5rem",
+    width: "1.4rem",
+    height: "1.4rem",
     display: "block",
     cursor: "pointer",
+    transform: hovered ? "scale(1.25)" : "scale(1)",
+    transition: "transform 0.1s ease",
   };
+
   return (
     <span
       role="button"
       style={starStyle}
       onClick={onRate}
-      onMouseEnter={onHoverIn}
-      onMouseLeave={onHoverOut}
+      onMouseEnter={() => {
+        setHovered(true);
+        onHoverIn();
+      }}
+      onMouseLeave={() => {
+        setHovered(false);
+        onHoverOut();
+      }}
     >
       {full ? (
         <svg

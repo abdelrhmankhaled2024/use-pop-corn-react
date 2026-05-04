@@ -45,12 +45,21 @@ export default function App() {
 
   function handleSelectMovie(newMovie) {
     setWatched((prev) => {
-      const unique = [...prev, newMovie].filter(
-        (movie, index, arr) =>
-          arr.findIndex((m) => m.imdbID === movie.imdbID) === index,
-      );
-      return unique;
+      if (prev.some((m) => m.imdbID === newMovie.imdbID)) return prev;
+      return [...prev, { ...newMovie, userRating: 0 }];
     });
+  }
+
+  function handleRateMovie(imdbID, rating) {
+    setWatched((prev) =>
+      prev.map((movie) =>
+        movie.imdbID === imdbID ? { ...movie, userRating: rating } : movie,
+      ),
+    );
+  }
+
+  function handleRemoveWatched(imdbID) {
+    setWatched((prev) => prev.filter((movie) => movie.imdbID !== imdbID));
   }
   return (
     <>
@@ -75,7 +84,7 @@ export default function App() {
             <p className="error">🎬 No movies found</p>
           )}
         </ListBox>
-        <WatchedBox watched={watched} />
+        <WatchedBox watched={watched} onRateMovie={handleRateMovie} onRemoveWatched={handleRemoveWatched} />
       </Main>
     </>
   );

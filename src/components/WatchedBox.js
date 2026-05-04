@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { tempWatchedData } from "../data";
 import { average } from "../utils";
+import StarRating from "./StarRating";
 
 function WatchedSummary({ watched }) {
   const avgImdbRating = average(watched.map((movie) => movie.imdbRating));
@@ -20,7 +20,7 @@ function WatchedSummary({ watched }) {
   );
 }
 
-function WatchedMovie({ movie }) {
+function WatchedMovie({ movie, onRateMovie, onRemoveWatched }) {
   return (
     <li>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
@@ -28,25 +28,40 @@ function WatchedMovie({ movie }) {
       <div>
         <p>
           <span>📆</span>
-
           <span>{movie.Year}</span>
         </p>
       </div>
+      <StarRating
+        maxRating={10}
+        initialRating={movie.userRating}
+        onRate={(rating) => onRateMovie(movie.imdbID, rating)}
+      />
+      <button
+        className="btn-delete"
+        onClick={() => onRemoveWatched(movie.imdbID)}
+      >
+        ✕
+      </button>
     </li>
   );
 }
 
-function WatchedMovieList({ watched }) {
+function WatchedMovieList({ watched, onRateMovie, onRemoveWatched }) {
   return (
     <ul className="list">
       {watched.map((movie) => (
-        <WatchedMovie key={movie.imdbID} movie={movie} />
+        <WatchedMovie
+          key={movie.imdbID}
+          movie={movie}
+          onRateMovie={onRateMovie}
+          onRemoveWatched={onRemoveWatched}
+        />
       ))}
     </ul>
   );
 }
 
-export function WatchedBox({ watched }) {
+export function WatchedBox({ watched, onRateMovie, onRemoveWatched }) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -57,7 +72,11 @@ export function WatchedBox({ watched }) {
       {isOpen && (
         <>
           <WatchedSummary watched={watched} />
-          <WatchedMovieList watched={watched} />
+          <WatchedMovieList
+            watched={watched}
+            onRateMovie={onRateMovie}
+            onRemoveWatched={onRemoveWatched}
+          />
         </>
       )}
     </div>
