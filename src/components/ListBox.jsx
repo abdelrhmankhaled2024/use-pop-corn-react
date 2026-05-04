@@ -20,7 +20,7 @@ export function ListBox({ children }) {
 
   return (
     <div className="box">
-      <button className="btn-toggle" onClick={() => setIsOpen((open) => !open)}>
+      <button className="btn-toggle" onClick={() => setIsOpen((o) => !o)}>
         {isOpen ? "–" : "+"}
       </button>
       {isOpen && children}

@@ -5,8 +5,8 @@ import { ListBox, MovieItem } from "./components/ListBox";
 import { WatchedBox } from "./components/WatchedBox";
 import Loader from "./components/Loader";
 import MovieDetails from "./components/MovieDetails";
+import { OMDB_API_KEY, OMDB_BASE_URL } from "./config";
 
-const apiKey = "c0ecb462";
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
@@ -15,27 +15,29 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
-    const controller = new AbortController();
+    if (!query) {
+      setMovies([]);
+      return;
+    }
 
+    setIsLoading(true);
+
+    const controller = new AbortController();
     const timeout = setTimeout(() => {
       async function fetchMovies() {
         try {
-          setIsLoading(true);
-
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${apiKey}&s=${query}`,
+            `${OMDB_BASE_URL}/?apikey=${OMDB_API_KEY}&s=${query}`,
             { signal: controller.signal },
           );
-
           const data = await res.json();
-          setMovies(data?.Search || []);
+          setMovies(data?.Search ?? []);
         } catch (err) {
-          if (err.name === "AbortError") return;
+          if (err.name !== "AbortError") setMovies([]);
         } finally {
           setIsLoading(false);
         }
       }
-
       fetchMovies();
     }, 500);
 
@@ -45,25 +47,20 @@ export default function App() {
     };
   }, [query]);
 
-  function handleAddToWatched(movie) {
-    setWatched((prev) => {
-      if (prev.some((m) => m.imdbID === movie.imdbID)) return prev;
-      return [...prev, movie];
-    });
-    setSelectedId(null);
-  }
-
-  function handleRateMovie(imdbID, rating) {
+  const handleAddToWatched = (movie) => {
     setWatched((prev) =>
-      prev.map((movie) =>
-        movie.imdbID === imdbID ? { ...movie, userRating: rating } : movie,
-      ),
+      prev.some((m) => m.imdbID === movie.imdbID) ? prev : [...prev, movie],
     );
-  }
+    setSelectedId(null);
+  };
 
-  function handleRemoveWatched(imdbID) {
-    setWatched((prev) => prev.filter((movie) => movie.imdbID !== imdbID));
-  }
+  const handleRateMovie = (imdbID, rating) =>
+    setWatched((prev) =>
+      prev.map((m) => (m.imdbID === imdbID ? { ...m, userRating: rating } : m)),
+    );
+
+  const handleRemoveWatched = (imdbID) =>
+    setWatched((prev) => prev.filter((m) => m.imdbID !== imdbID));
 
   return (
     <>
@@ -93,13 +90,15 @@ export default function App() {
                 />
               ))}
             </ul>
-          ) : movies.length === 0 && query === "" ? (
-            <></>
-          ) : (
+          ) : query ? (
             <p className="error">🎬 No movies found.</p>
-          )}
+          ) : null}
         </ListBox>
-        <WatchedBox watched={watched} onRemoveWatched={handleRemoveWatched} />
+        <WatchedBox
+          watched={watched}
+          onRemoveWatched={handleRemoveWatched}
+          onSelectMovie={setSelectedId}
+        />
       </Main>
     </>
   );

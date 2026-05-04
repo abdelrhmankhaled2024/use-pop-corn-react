@@ -339,6 +339,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-back span {
+  display: block;
+  transform: translateY(-1px);
 }
 
 .loader-container {

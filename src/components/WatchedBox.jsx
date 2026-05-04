@@ -10,24 +10,15 @@ function formatRuntime(mins) {
 }
 
 function WatchedSummary({ watched }) {
-  const avgUserRating = average(watched.map((movie) => movie.userRating));
-  const totalRuntime = watched.reduce(
-    (acc, movie) => acc + (parseInt(movie.Runtime) || 0),
-    0,
-  );
+  const avgUserRating = average(watched.map((m) => m.userRating));
+  const totalRuntime = watched.reduce((acc, m) => acc + (parseInt(m.Runtime) || 0), 0);
 
   return (
     <div className="summary">
       <h2>Movies you watched</h2>
       <div>
-        <p>
-          <span>#️⃣</span>
-          <span>{watched.length} movies</span>
-        </p>
-        <p>
-          <span>⏱</span>
-          <span>{formatRuntime(totalRuntime)}</span>
-        </p>
+        <p><span>#️⃣</span><span>{watched.length} movies</span></p>
+        <p><span>⏱</span><span>{formatRuntime(totalRuntime)}</span></p>
         <p>
           <span>⭐</span>
           <span>{avgUserRating > 0 ? `${avgUserRating.toFixed(1)}/10` : "—"}</span>
@@ -37,16 +28,13 @@ function WatchedSummary({ watched }) {
   );
 }
 
-function WatchedMovie({ movie, onRemoveWatched }) {
+function WatchedMovie({ movie, onRemoveWatched, onSelectMovie }) {
   return (
-    <li>
+    <li onClick={() => onSelectMovie(movie.imdbID)} style={{ cursor: "pointer" }}>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>
-        <p>
-          <span>📆</span>
-          <span>{movie.Year}</span>
-        </p>
+        <p><span>📆</span><span>{movie.Year}</span></p>
         <p>
           <span>⭐</span>
           <span>{movie.userRating > 0 ? `${movie.userRating}/10` : "—"}</span>
@@ -54,7 +42,7 @@ function WatchedMovie({ movie, onRemoveWatched }) {
       </div>
       <button
         className="btn-delete"
-        onClick={() => onRemoveWatched(movie.imdbID)}
+        onClick={(e) => { e.stopPropagation(); onRemoveWatched(movie.imdbID); }}
       >
         ✕
       </button>
@@ -62,32 +50,27 @@ function WatchedMovie({ movie, onRemoveWatched }) {
   );
 }
 
-function WatchedMovieList({ watched, onRemoveWatched }) {
-  return (
-    <ul className="list">
-      {watched.map((movie) => (
-        <WatchedMovie
-          key={movie.imdbID}
-          movie={movie}
-          onRemoveWatched={onRemoveWatched}
-        />
-      ))}
-    </ul>
-  );
-}
-
-export function WatchedBox({ watched, onRemoveWatched }) {
+export function WatchedBox({ watched, onRemoveWatched, onSelectMovie }) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
     <div className="box">
-      <button className="btn-toggle" onClick={() => setIsOpen((open) => !open)}>
+      <button className="btn-toggle" onClick={() => setIsOpen((o) => !o)}>
         {isOpen ? "–" : "+"}
       </button>
       {isOpen && (
         <>
           <WatchedSummary watched={watched} />
-          <WatchedMovieList watched={watched} onRemoveWatched={onRemoveWatched} />
+          <ul className="list">
+            {watched.map((movie) => (
+              <WatchedMovie
+                key={movie.imdbID}
+                movie={movie}
+                onRemoveWatched={onRemoveWatched}
+                onSelectMovie={onSelectMovie}
+              />
+            ))}
+          </ul>
         </>
       )}
     </div>
