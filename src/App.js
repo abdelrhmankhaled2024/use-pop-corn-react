@@ -1,25 +1,82 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from "react";
+import Main from "./components/Main";
+import { Navbar, NumResults } from "./components/Navbar";
+import { ListBox, MovieItem } from "./components/ListBox";
+import { WatchedBox } from "./components/WatchedBox";
+import Loader from "./components/Loader";
 
-function App() {
+const apiKey = "c0ecb462";
+export default function App() {
+  const [movies, setMovies] = useState([]);
+  const [watched, setWatched] = useState([]);
+  const [query, setQuery] = useState("avengers");
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const timeout = setTimeout(() => {
+      async function fetchMovies() {
+        try {
+          setIsLoading(true);
+
+          const res = await fetch(
+            `http://www.omdbapi.com/?apikey=${apiKey}&s=${query}`,
+            { signal: controller.signal },
+          );
+
+          const data = await res.json();
+          setMovies(data?.Search || []);
+        } catch (err) {
+          if (err.name === "AbortError") return;
+        } finally {
+          setIsLoading(false);
+        }
+      }
+
+      fetchMovies();
+    }, 500);
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [query]);
+
+  function handleSelectMovie(newMovie) {
+    setWatched((prev) => {
+      const unique = [...prev, newMovie].filter(
+        (movie, index, arr) =>
+          arr.findIndex((m) => m.imdbID === movie.imdbID) === index,
+      );
+      return unique;
+    });
+  }
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <Navbar query={query} setQuery={setQuery}>
+        <NumResults movies={movies} />
+      </Navbar>
+      <Main>
+        <ListBox>
+          {isLoading ? (
+            <Loader />
+          ) : movies.length > 0 ? (
+            <ul className="list">
+              {movies.map((movie) => (
+                <MovieItem
+                  key={movie.imdbID}
+                  movie={movie}
+                  onSelectMovie={handleSelectMovie}
+                />
+              ))}
+            </ul>
+          ) : (
+            <p className="error">🎬 No movies found</p>
+          )}
+        </ListBox>
+        <WatchedBox watched={watched} />
+      </Main>
+    </>
   );
 }
-
-export default App;
