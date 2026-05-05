@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 function Logo() {
   return (
     <div className="logo">
@@ -8,8 +9,14 @@ function Logo() {
 }
 
 function Search({ query, setQuery }) {
+  const inputEl = useRef(null);
+
+  useEffect(() => {
+    inputEl.current.focus();
+  }, []);
   return (
     <input
+      ref={inputEl}
       className="search"
       type="text"
       placeholder="Search movies..."
