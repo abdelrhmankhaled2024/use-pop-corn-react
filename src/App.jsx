@@ -9,10 +9,20 @@ import { OMDB_API_KEY, OMDB_BASE_URL } from "./config";
 
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(() => {
+    const storedData = localStorage.getItem("watched");
+    return storedData ? JSON.parse(storedData) : [];
+  });
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+
+  useEffect(
+    function () {
+      localStorage.setItem("watched", JSON.stringify(watched));
+    },
+    [watched],
+  );
 
   useEffect(() => {
     if (!query) {
